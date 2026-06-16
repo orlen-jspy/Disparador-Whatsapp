@@ -22,9 +22,6 @@ export function gaussianDelay(min = 60, max = 180): number {
   return Math.round(value * 10) / 10
 }
 
-export function microDelay(): number {
-  return Math.floor(Math.random() * 1200) + 300
-}
 
 export function keyDelay(): number {
   return Math.floor(Math.random() * 91) + 30

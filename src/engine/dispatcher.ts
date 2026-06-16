@@ -75,7 +75,7 @@ export class Dispatcher {
         if (this.stopped) break
 
         const contact = batch[i]
-        this.log('info', `Processando ${i + 1}/${batch.length}: ${contact.nome} (${contact.telefone})`)
+        this.log('info', `Processando ${i + 1}/${batch.length}: ${contact.nome}`)
 
         try {
           await this.sendToContact(contact, config)
@@ -120,7 +120,6 @@ export class Dispatcher {
       throw new Error(`Não foi possível abrir conversa com ${contact.nome}`)
     }
 
-    this.log('info', 'Campo de mensagem detectado, aguardando estabilização...')
     await this.sleep(2000 + Math.floor(Math.random() * 1000))
 
     if (config.imagemPath) {
@@ -131,7 +130,7 @@ export class Dispatcher {
 
     const input = await this.getMessageInput()
     if (!input) throw new Error('Campo de mensagem não encontrado')
-    await input.click()
+    await input.focus()
     await this.sleep(500 + Math.floor(Math.random() * 400))
 
     this.log('info', 'Digitando mensagem...')
@@ -141,17 +140,7 @@ export class Dispatcher {
   }
 
   private async openConversation(phone: string): Promise<boolean> {
-    if (await this.openViaDirectURL(phone)) return true
-
-    this.log('warning', 'URL direta falhou. Voltando pra home e tentando Ctrl+N...')
-    await this.goHome()
-
-    if (await this.openViaShortcut(phone)) return true
-
-    this.log('warning', 'Ctrl+N falhou. Tentando barra de busca...')
-    await this.goHome()
-
-    return await this.openViaSearchBar(phone)
+    return await this.openViaDirectURL(phone)
   }
 
   private async openViaDirectURL(phone: string): Promise<boolean> {
@@ -164,182 +153,64 @@ export class Dispatcher {
         timeout: 30000
       })
 
-      const currentUrl = await this.page.evaluate(() => window.location.href)
-      this.log('info', `URL atual após navegação: ${currentUrl}`)
-
       await this.sleep(3000)
 
-      await this.tryClickContinue()
-
-      const found = await this.waitForChatInput(40000)
+      const found = await this.waitForChatInput(45000)
       if (found) {
-        this.log('info', 'Campo de mensagem encontrado via URL direta')
+        this.log('info', 'Campo de mensagem encontrado')
         return true
       }
 
-      this.log('warning', 'Timeout: campo de mensagem não apareceu')
+      this.log('warning', 'Timeout aguardando campo de mensagem')
       return false
     } catch (err) {
-      this.log('error', `Exceção na URL direta: ${err instanceof Error ? err.message : err}`)
+      this.log('error', `Erro na navegação: ${err instanceof Error ? err.message : err}`)
       return false
-    }
-  }
-
-  private async tryClickContinue(): Promise<void> {
-    try {
-      const clicked = await this.page.evaluate(() => {
-        const buttons = document.querySelectorAll<HTMLElement>('button, div[role="button"]')
-        for (const btn of buttons) {
-          const text = (btn.textContent || '').trim().toLowerCase()
-          if (text === 'continuar' || text === 'continue' || text === 'continue to chat') {
-            btn.click()
-            return true
-          }
-        }
-        return false
-      })
-      if (clicked) {
-        this.log('info', 'Botão Continuar clicado')
-        await this.sleep(3000)
-        const afterContinue = await this.page.evaluate(() => window.location.href)
-        this.log('info', `URL após clicar Continuar: ${afterContinue}`)
-      }
-    } catch {
-      // ignore
     }
   }
 
   private async waitForChatInput(timeoutMs: number): Promise<boolean> {
     const start = Date.now()
-    let lastLog = 0
     while (Date.now() - start < timeoutMs) {
       try {
-        const elapsed = Math.floor((Date.now() - start) / 1000)
-        if (elapsed - lastLog >= 5) {
-          lastLog = elapsed
-          this.log('info', `Aguardando campo de mensagem... (${elapsed}s)`)
-        }
+        const result = await this.page.evaluate(() => {
+          const continueBtns = document.querySelectorAll<HTMLElement>(
+            'button, div[role="button"]'
+          )
+          for (const btn of continueBtns) {
+            const text = (btn.textContent || '').trim().toLowerCase()
+            if (text === 'continuar' || text === 'continue' || text === 'continue to chat') {
+              btn.click()
+              return 'continue-clicked'
+            }
+          }
 
-        const onScreen = await this.page.evaluate(() => {
           const footer = document.querySelector('footer')
           if (footer) {
             const ce = footer.querySelector<HTMLElement>('[contenteditable="true"]')
-            if (ce) return 'chat-input'
+            if (ce) return 'input-found'
           }
+
           return null
         })
-        if (onScreen === 'chat-input') return true
+
+        if (result === 'continue-clicked') {
+          this.log('info', 'Botão Continuar clicado')
+          await this.sleep(2000)
+        }
+
+        if (result === 'input-found') return true
       } catch {
-        // page might be in transition
+        // page may be in transition
       }
       await this.sleep(500)
     }
     return false
   }
 
-  private async openViaShortcut(phone: string): Promise<boolean> {
-    try {
-      await this.page.keyboard.down('Control')
-      await this.page.keyboard.press('n')
-      await this.page.keyboard.up('Control')
-      await this.sleep(2500)
-
-      const typed = await this.page.evaluate(() => {
-        const editables = document.querySelectorAll<HTMLElement>('[contenteditable="true"]')
-        if (editables.length > 0) {
-          editables[0].focus()
-          editables[0].click()
-          return true
-        }
-        return false
-      })
-      if (!typed) return false
-
-      await this.sleep(500)
-      await this.page.keyboard.type(phone, { delay: 80 + Math.floor(Math.random() * 60) })
-      await this.sleep(3000)
-
-      const clicked = await this.page.evaluate(() => {
-        const items = document.querySelectorAll<HTMLElement>(
-          '[role="listitem"], div[data-testid="cell-frame-container"]'
-        )
-        if (items.length > 0) {
-          items[0].click()
-          return true
-        }
-        return false
-      })
-      if (!clicked) return false
-
-      await this.sleep(3000)
-      return await this.waitForChatInput(25000)
-    } catch (err) {
-      this.log('error', `Erro Ctrl+N: ${err instanceof Error ? err.message : err}`)
-      return false
-    }
-  }
-
-  private async openViaSearchBar(phone: string): Promise<boolean> {
-    try {
-      const focused = await this.page.evaluate(() => {
-        const editables = document.querySelectorAll<HTMLElement>('[contenteditable="true"]')
-        if (editables.length > 0) {
-          editables[0].focus()
-          editables[0].click()
-          return true
-        }
-        return false
-      })
-      if (!focused) return false
-
-      await this.sleep(500)
-      await this.page.keyboard.type(phone, { delay: 80 + Math.floor(Math.random() * 60) })
-      await this.sleep(3000)
-
-      const clicked = await this.page.evaluate(() => {
-        const items = document.querySelectorAll<HTMLElement>(
-          '[role="listitem"], div[data-testid="cell-frame-container"]'
-        )
-        if (items.length > 0) {
-          items[0].click()
-          return true
-        }
-        return false
-      })
-      if (!clicked) return false
-
-      await this.sleep(3000)
-      return await this.waitForChatInput(25000)
-    } catch (err) {
-      this.log('error', `Erro busca: ${err instanceof Error ? err.message : err}`)
-      return false
-    }
-  }
-
-  private async goHome(): Promise<void> {
-    try {
-      await this.page.goto('https://web.whatsapp.com', {
-        waitUntil: 'networkidle2',
-        timeout: 15000
-      }).catch(() => {})
-      await this.sleep(2500)
-    } catch {
-      // ignore
-    }
-  }
-
   private async getMessageInput(): Promise<any> {
-    const selectors = [
-      'div[data-testid="media-preview"] [contenteditable="true"]',
-      'div[data-testid="preview-container"] [contenteditable="true"]',
-      'footer [contenteditable="true"]',
-      '[contenteditable="true"]'
-    ]
-    for (const sel of selectors) {
-      const el = await this.page.$(sel)
-      if (el) return el
-    }
-    return null
+    const el = await this.page.$('footer [contenteditable="true"]')
+    return el || null
   }
 
   private async clickSend(): Promise<void> {
@@ -357,7 +228,7 @@ export class Dispatcher {
     })
 
     if (!clicked) {
-      this.log('info', 'Pressionando Enter como fallback...')
+      this.log('info', 'Pressionando Enter...')
       await this.page.keyboard.press('Enter')
     }
   }
