@@ -1,0 +1,25 @@
+appId: com.novodisparador.app
+productName: Novo Disparador
+directories:
+  buildResources: resources
+  output: dist
+files:
+  - out/**/*
+  - "!node_modules/**/*"
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: "${productName}-Setup-${version}.${ext}"
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  shortcutName: Novo Disparador
+  uninstallDisplayName: "Novo Disparador ${version}"
+extraResources:
+  - from: resources/
+    to: resources/
+    filter:
+      - "**/*"
