@@ -214,23 +214,42 @@ export class Dispatcher {
   }
 
   private async clickSend(): Promise<void> {
-    const clicked = await this.page.evaluate(() => {
+    const sent = await this.page.evaluate(() => {
       const buttons = document.querySelectorAll<HTMLElement>('button')
       for (const btn of buttons) {
         const label = (btn.getAttribute('aria-label') || '').toLowerCase()
         const text = (btn.textContent || '').trim().toLowerCase()
-        if (label === 'enviar' || label === 'send' || text === 'enviar' || text === 'send') {
+        if (
+          btn.getAttribute('data-testid') === 'send' ||
+          label === 'enviar' || label === 'send' ||
+          text === 'enviar' || text === 'send'
+        ) {
           btn.click()
-          return true
+          return 'button'
         }
       }
-      return false
+      return null
     })
 
-    if (!clicked) {
+    if (!sent) {
       this.log('info', 'Pressionando Enter...')
       await this.page.keyboard.press('Enter')
     }
+
+    await this.sleep(2000 + Math.floor(Math.random() * 1500))
+
+    const vazio = await this.page.evaluate(() => {
+      const ce = document.querySelector<HTMLElement>('footer [contenteditable="true"]')
+      if (!ce) return false
+      return (ce.textContent || '').trim().length === 0
+    })
+
+    if (!vazio) {
+      this.log('warning', 'Campo ainda tem texto, aguardando mais...')
+      await this.sleep(2000)
+    }
+
+    this.log('info', 'Mensagem enviada')
   }
 
   private sleep(ms: number): Promise<void> {
