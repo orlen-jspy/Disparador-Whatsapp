@@ -5,7 +5,6 @@ directories:
   output: dist
 files:
   - out/**/*
-  - "!node_modules/**/*"
 win:
   target:
     - target: nsis
