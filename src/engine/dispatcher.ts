@@ -123,9 +123,13 @@ export class Dispatcher {
     await this.sleep(2000 + Math.floor(Math.random() * 1000))
 
     if (config.imagemPath) {
-      this.log('info', 'Colando imagem primeiro...')
+      this.log('info', 'Colando imagem...')
       await pasteImageToClipboard(this.page, config.imagemPath)
       await this.sleep(2000 + Math.floor(Math.random() * 1000))
+
+      this.log('info', 'Fechando preview da imagem...')
+      await this.page.keyboard.press('Escape')
+      await this.sleep(1000)
     }
 
     const input = await this.getMessageInput()
