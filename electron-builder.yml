@@ -1,5 +1,5 @@
-appId: com.novodisparador.app
-productName: Novo Disparador
+appId: com.disparazap.app
+productName: DisparaZAP
 directories:
   buildResources: resources
   output: dist
@@ -15,8 +15,8 @@ nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   perMachine: false
-  shortcutName: Novo Disparador
-  uninstallDisplayName: "Novo Disparador ${version}"
+  shortcutName: DisparaZAP
+  uninstallDisplayName: "DisparaZAP ${version}"
 extraResources:
   - from: resources/
     to: resources/

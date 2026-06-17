@@ -16,17 +16,17 @@ export interface BrowserSession {
   page: Page
 }
 
-function getProfileDir(): string {
+function getDefaultProfileDir(): string {
   const appData = process.env.APPDATA || path.join(os.homedir(), '.config')
-  const profileDir = path.join(appData, 'novo-disparador', 'profile')
+  const profileDir = path.join(appData, 'disparazap', 'profile')
   if (!fs.existsSync(profileDir)) {
     fs.mkdirSync(profileDir, { recursive: true })
   }
   return profileDir
 }
 
-export async function launchBrowser(): Promise<BrowserSession> {
-  const profileDir = getProfileDir()
+export async function launchBrowser(profileDir?: string): Promise<BrowserSession> {
+  const dir = profileDir || getDefaultProfileDir()
 
   const chromePath = findChrome()
   if (!chromePath) {
@@ -38,7 +38,7 @@ export async function launchBrowser(): Promise<BrowserSession> {
   const browser = await puppeteer.launch({
     headless: false,
     defaultViewport: null,
-    userDataDir: profileDir,
+    userDataDir: dir,
     executablePath: chromePath,
     args: [
       '--no-sandbox',

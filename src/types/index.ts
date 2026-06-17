@@ -10,7 +10,8 @@ export interface DispatchConfig {
   delayMax: number
   imagemPath: string | null
   lote: number
-  tempoEntreLotes: number
+  recallMin: number
+  recallMax: number
 }
 
 export type ConnectionStatus = 'buscando-qr' | 'autenticado' | 'desconectado'
@@ -20,6 +21,7 @@ export interface LogEntry {
   timestamp: string
   level: 'info' | 'success' | 'warning' | 'error'
   message: string
+  tabId?: string
 }
 
 export interface DispatchProgress {
@@ -28,6 +30,7 @@ export interface DispatchProgress {
   erros: number
   atual: number
   results: Record<string, 'success' | 'error'>
+  tabId?: string
 }
 
 export interface ImportResult {
@@ -35,16 +38,33 @@ export interface ImportResult {
   erros: string[]
 }
 
+export interface TabState {
+  id: string
+  label: string
+  contacts: Contact[]
+  mensagem: string
+  delayMin: number
+  delayMax: number
+  lote: number
+  recallMin: number
+  recallMax: number
+  imagemPath: string | null
+  progress: DispatchProgress | null
+  logs: LogEntry[]
+  connectionStatus: ConnectionStatus
+  disparando: boolean
+  profileDir: string
+}
+
 export interface ElectronAPI {
   importContacts: () => Promise<ImportResult>
-  getContacts: () => Promise<Contact[]>
-  addContact: (contact: Omit<Contact, 'id'>) => Promise<Contact>
-  removeContact: (id: string) => Promise<void>
-  startDispatch: (config: DispatchConfig) => Promise<void>
-  stopDispatch: () => Promise<void>
-  getConnectionStatus: () => Promise<ConnectionStatus>
   selectImage: () => Promise<string | null>
+  createProfile: (tabId: string) => Promise<string>
+  destroyProfile: (tabId: string) => Promise<void>
+  startDispatch: (tabId: string, config: DispatchConfig, contacts: Contact[]) => Promise<void>
+  stopDispatch: (tabId: string) => Promise<void>
+  getConnectionStatus: (tabId: string) => Promise<ConnectionStatus>
   onLog: (callback: (entry: LogEntry) => void) => () => void
-  onConnectionStatus: (callback: (status: ConnectionStatus) => void) => () => void
+  onConnectionStatus: (callback: (status: ConnectionStatus, tabId: string) => void) => () => void
   onDispatchProgress: (callback: (progress: DispatchProgress) => void) => () => void
 }

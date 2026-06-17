@@ -15,12 +15,12 @@ export default function DelayConfig({
   onChangeMax,
   disparando
 }: Props): React.ReactElement {
-  const handleMinChange = (value: number) => {
+  const handleMinBlur = (value: number) => {
     const clamped = Math.max(60, Math.min(value, delayMax - 10))
     onChangeMin(clamped)
   }
 
-  const handleMaxChange = (value: number) => {
+  const handleMaxBlur = (value: number) => {
     const clamped = Math.max(delayMin + 10, value)
     onChangeMax(clamped)
   }
@@ -38,7 +38,8 @@ export default function DelayConfig({
             min={60}
             max={delayMax - 10}
             value={delayMin}
-            onChange={(e) => handleMinChange(Number(e.target.value))}
+            onChange={(e) => onChangeMin(Number(e.target.value))}
+            onBlur={(e) => handleMinBlur(Number(e.target.value))}
             disabled={disparando}
             className="w-full px-2 py-1 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
           />
@@ -49,7 +50,8 @@ export default function DelayConfig({
             type="number"
             min={delayMin + 10}
             value={delayMax}
-            onChange={(e) => handleMaxChange(Number(e.target.value))}
+            onChange={(e) => onChangeMax(Number(e.target.value))}
+            onBlur={(e) => handleMaxBlur(Number(e.target.value))}
             disabled={disparando}
             className="w-full px-2 py-1 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
           />

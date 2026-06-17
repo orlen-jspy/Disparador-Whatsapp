@@ -1,15 +1,20 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron'
 import * as path from 'path'
+import * as os from 'os'
+import * as fs from 'fs'
 import type { Contact, DispatchConfig, LogEntry, ConnectionStatus, DispatchProgress } from '../types'
 import { parseXLSX, parseCSV } from '../engine/contact-parser'
 import { launchBrowser, navigateToWhatsApp, waitForAuthentication } from '../engine/browser-manager'
 import { Dispatcher } from '../engine/dispatcher'
-import { loadContacts, saveContacts, createContact } from './contact-store'
 import { v4 as uuidv4 } from 'uuid'
 
-let contacts: Contact[] = loadContacts()
-let dispatcher: Dispatcher | null = null
-let connectionStatus: ConnectionStatus = 'desconectado'
+interface TabInstance {
+  dispatcher: Dispatcher | null
+  browser: import('puppeteer').Browser | null
+  profileDir: string
+}
+
+const tabInstances = new Map<string, TabInstance>()
 
 function getWindow(): BrowserWindow | null {
   const wins = BrowserWindow.getAllWindows()
@@ -21,10 +26,9 @@ function emitLog(entry: LogEntry): void {
   if (win) win.webContents.send('dispatch-log', entry)
 }
 
-function emitStatus(status: ConnectionStatus): void {
-  connectionStatus = status
+function emitStatus(status: ConnectionStatus, tabId: string): void {
   const win = getWindow()
-  if (win) win.webContents.send('connection-status', status)
+  if (win) win.webContents.send('connection-status', { status, tabId })
 }
 
 function sleep(ms: number): Promise<void> {
@@ -60,29 +64,11 @@ export function setupIpcHandlers(): void {
         return { contatos: [], erros: [`Formato não suportado: ${ext}`] }
       }
 
-      contacts = contacts.concat(imported)
-      saveContacts(contacts)
       return { contatos: imported, erros: [] }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro na importação'
       return { contatos: [], erros: [msg] }
     }
-  })
-
-  ipcMain.handle('get-contacts', () => {
-    return contacts
-  })
-
-  ipcMain.handle('add-contact', (_event, contact: Omit<Contact, 'id'>) => {
-    const newContact = createContact(contact.nome, contact.telefone)
-    contacts.push(newContact)
-    saveContacts(contacts)
-    return newContact
-  })
-
-  ipcMain.handle('remove-contact', (_event, id: string) => {
-    contacts = contacts.filter((c) => c.id !== id)
-    saveContacts(contacts)
   })
 
   ipcMain.handle('select-image', async () => {
@@ -98,43 +84,71 @@ export function setupIpcHandlers(): void {
     return result.filePaths[0]
   })
 
-  ipcMain.handle('start-dispatch', async (_event, config: DispatchConfig) => {
+  ipcMain.handle('create-profile', (_event, tabId: string) => {
+    const appData = process.env.APPDATA || path.join(os.homedir(), '.config')
+    const profileDir = path.join(appData, 'disparazap', 'profiles', tabId)
+    if (!fs.existsSync(profileDir)) {
+      fs.mkdirSync(profileDir, { recursive: true })
+    }
+    tabInstances.set(tabId, { dispatcher: null, browser: null, profileDir })
+    return profileDir
+  })
+
+  ipcMain.handle('destroy-profile', async (_event, tabId: string) => {
+    const inst = tabInstances.get(tabId)
+    if (!inst) return
+    if (inst.dispatcher) {
+      inst.dispatcher.stop()
+      inst.dispatcher = null
+    }
+    if (inst.browser) {
+      try { await inst.browser.close() } catch { /* ignora */ }
+      inst.browser = null
+    }
+    tabInstances.delete(tabId)
+  })
+
+  ipcMain.handle('start-dispatch', async (_event, tabId: string, config: DispatchConfig, contacts: Contact[]) => {
     if (contacts.length === 0) {
       throw new Error('Nenhum contato na lista')
+    }
+
+    let inst = tabInstances.get(tabId)
+    if (!inst) {
+      emitLog({ id: uuidv4(), timestamp: new Date().toLocaleTimeString('pt-BR'), level: 'error', message: 'Perfil não encontrado para esta aba', tabId })
+      return
     }
 
     let browser: import('puppeteer').Browser | null = null
 
     try {
-      const launched = await launchBrowser()
+      emitLog({ id: uuidv4(), timestamp: new Date().toLocaleTimeString('pt-BR'), level: 'info', message: 'Iniciando navegador...', tabId })
+
+      const launched = await launchBrowser(inst.profileDir)
       browser = launched.browser
+      inst.browser = browser
       const page = launched.page
       await navigateToWhatsApp(page)
 
       await sleep(3000)
 
-      emitLog({
-        id: uuidv4(),
-        timestamp: new Date().toLocaleTimeString('pt-BR'),
-        level: 'info',
-        message: 'Verificando sessão do WhatsApp...'
-      })
+      emitLog({ id: uuidv4(), timestamp: new Date().toLocaleTimeString('pt-BR'), level: 'info', message: 'Verificando sessão do WhatsApp...', tabId })
 
       const authenticated = await waitForAuthentication(page, 180000)
       if (!authenticated) {
-        emitStatus('desconectado')
+        emitStatus('desconectado', tabId)
         throw new Error('Falha na autenticação do WhatsApp — QR Code não escaneado a tempo')
       }
 
-      emitStatus('autenticado')
-      emitLog({
-        id: uuidv4(),
-        timestamp: new Date().toLocaleTimeString('pt-BR'),
-        level: 'success',
-        message: 'WhatsApp autenticado com sucesso'
-      })
+      emitStatus('autenticado', tabId)
+      emitLog({ id: uuidv4(), timestamp: new Date().toLocaleTimeString('pt-BR'), level: 'success', message: 'WhatsApp autenticado com sucesso', tabId })
 
-      dispatcher = new Dispatcher(page, emitLog, emitStatus, emitProgress)
+      const tabLog = (entry: LogEntry): void => emitLog({ ...entry, tabId })
+      const tabStatus = (status: ConnectionStatus): void => emitStatus(status, tabId)
+      const tabProgress = (progress: DispatchProgress): void => emitProgress({ ...progress, tabId })
+
+      const dispatcher = new Dispatcher(page, tabLog, tabStatus, tabProgress)
+      inst.dispatcher = dispatcher
 
       const enforcedConfig: DispatchConfig = {
         ...config,
@@ -142,37 +156,31 @@ export function setupIpcHandlers(): void {
       }
 
       await dispatcher.start(contacts, enforcedConfig)
-      emitLog({
-        id: uuidv4(),
-        timestamp: new Date().toLocaleTimeString('pt-BR'),
-        level: 'info',
-        message: 'Disparo finalizado. Fechando navegador...'
-      })
+      emitLog({ id: uuidv4(), timestamp: new Date().toLocaleTimeString('pt-BR'), level: 'info', message: 'Disparo finalizado. Fechando navegador...', tabId })
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro no disparo'
-      emitLog({
-        id: uuidv4(),
-        timestamp: new Date().toLocaleTimeString('pt-BR'),
-        level: 'error',
-        message: msg
-      })
-      emitStatus('desconectado')
+      emitLog({ id: uuidv4(), timestamp: new Date().toLocaleTimeString('pt-BR'), level: 'error', message: msg, tabId })
+      emitStatus('desconectado', tabId)
     } finally {
-      dispatcher = null
+      inst.dispatcher = null
+      inst.browser = null
       if (browser) {
         try { await browser.close() } catch { /* ignora */ }
       }
     }
   })
 
-  ipcMain.handle('stop-dispatch', async () => {
-    if (dispatcher) {
-      dispatcher.stop()
-      dispatcher = null
+  ipcMain.handle('stop-dispatch', async (_event, tabId: string) => {
+    const inst = tabInstances.get(tabId)
+    if (inst && inst.dispatcher) {
+      inst.dispatcher.stop()
+      inst.dispatcher = null
     }
   })
 
-  ipcMain.handle('get-connection-status', () => {
-    return connectionStatus
+  ipcMain.handle('get-connection-status', (_event, tabId: string) => {
+    const inst = tabInstances.get(tabId)
+    if (!inst) return 'desconectado'
+    return 'desconectado'
   })
 }

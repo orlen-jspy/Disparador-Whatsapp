@@ -3,13 +3,12 @@ import type { ImportResult, Contact, DispatchConfig, LogEntry, ConnectionStatus,
 
 const electronAPI = {
   importContacts: (): Promise<ImportResult> => ipcRenderer.invoke('import-contacts'),
-  getContacts: (): Promise<Contact[]> => ipcRenderer.invoke('get-contacts'),
-  addContact: (contact: Omit<Contact, 'id'>): Promise<Contact> => ipcRenderer.invoke('add-contact', contact),
-  removeContact: (id: string): Promise<void> => ipcRenderer.invoke('remove-contact', id),
-  startDispatch: (config: DispatchConfig): Promise<void> => ipcRenderer.invoke('start-dispatch', config),
-  stopDispatch: (): Promise<void> => ipcRenderer.invoke('stop-dispatch'),
-  getConnectionStatus: (): Promise<ConnectionStatus> => ipcRenderer.invoke('get-connection-status'),
   selectImage: (): Promise<string | null> => ipcRenderer.invoke('select-image'),
+  createProfile: (tabId: string): Promise<string> => ipcRenderer.invoke('create-profile', tabId),
+  destroyProfile: (tabId: string): Promise<void> => ipcRenderer.invoke('destroy-profile', tabId),
+  startDispatch: (tabId: string, config: DispatchConfig, contacts: Contact[]): Promise<void> => ipcRenderer.invoke('start-dispatch', tabId, config, contacts),
+  stopDispatch: (tabId: string): Promise<void> => ipcRenderer.invoke('stop-dispatch', tabId),
+  getConnectionStatus: (tabId: string): Promise<ConnectionStatus> => ipcRenderer.invoke('get-connection-status', tabId),
 
   onLog: (callback: (entry: LogEntry) => void): (() => void) => {
     const handler = (_event: Electron.IpcRendererEvent, entry: LogEntry): void => callback(entry)
@@ -17,8 +16,8 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('dispatch-log', handler)
   },
 
-  onConnectionStatus: (callback: (status: ConnectionStatus) => void): (() => void) => {
-    const handler = (_event: Electron.IpcRendererEvent, status: ConnectionStatus): void => callback(status)
+  onConnectionStatus: (callback: (status: ConnectionStatus, tabId: string) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, payload: { status: ConnectionStatus; tabId: string }): void => callback(payload.status, payload.tabId)
     ipcRenderer.on('connection-status', handler)
     return () => ipcRenderer.removeListener('connection-status', handler)
   },

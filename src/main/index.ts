@@ -10,7 +10,7 @@ function createWindow(): void {
     height: 800,
     minWidth: 1024,
     minHeight: 700,
-    title: 'Novo Disparador',
+    title: 'DisparaZAP',
     backgroundColor: '#0f172a',
     show: false,
     webPreferences: {

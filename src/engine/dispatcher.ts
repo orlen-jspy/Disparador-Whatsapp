@@ -30,6 +30,18 @@ export class Dispatcher {
     this.onProgress = onProgress
 
     page.on('filechooser', (fc) => fc.cancel().catch(() => {}))
+
+    page.on('close', () => {
+      this.log('error', '[CRÍTICO] Navegador fechado inesperadamente — disparo interrompido')
+      this.stopped = true
+      this.onStatus('desconectado')
+    })
+
+    page.on('error', () => {
+      this.log('error', '[CRÍTICO] Erro fatal na página — disparo interrompido')
+      this.stopped = true
+      this.onStatus('desconectado')
+    })
   }
 
   private log(level: LogEntry['level'], message: string): void {
@@ -53,7 +65,8 @@ export class Dispatcher {
     const results: Record<string, 'success' | 'error'> = {}
 
     const lote = Math.max(1, config.lote || 1)
-    const pauseLote = Math.max(0, config.tempoEntreLotes || 0)
+    const recallMin = Math.max(300, config.recallMin || 300)
+    const recallMax = Math.max(recallMin + 1, config.recallMax || 500)
     const batchSize = Math.ceil(contacts.length / lote)
 
     const batches: Contact[][] = []
@@ -73,6 +86,13 @@ export class Dispatcher {
 
       for (let i = 0; i < batch.length; i++) {
         if (this.stopped) break
+
+        const alive = await this.page.evaluate(() => true).catch(() => false)
+        if (!alive) {
+          this.log('error', '[CRÍTICO] Página do WhatsApp não está acessível — interrompendo')
+          this.stopped = true
+          break
+        }
 
         const contact = batch[i]
         this.log('info', `Processando ${i + 1}/${batch.length}: ${contact.nome}`)
@@ -100,8 +120,9 @@ export class Dispatcher {
       }
 
       if (b < batches.length - 1 && !this.stopped) {
-        this.log('info', `Aguardando ${pauseLote}s entre lotes...`)
-        await this.sleep(pauseLote * 1000)
+        const recallDelay = gaussianDelay(recallMin, recallMax)
+        this.log('info', `Recall: aguardando ${recallDelay} segundos entre lotes...`)
+        await this.sleep(recallDelay * 1000)
       }
     }
 

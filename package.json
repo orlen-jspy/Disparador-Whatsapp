@@ -1,9 +1,9 @@
 {
-  "name": "novo-disparador",
+  "name": "disparazap",
   "version": "1.0.0",
-  "description": "MVP - Disparador de mensagens WhatsApp com automação stealth",
+  "description": "DisparaZAP - Disparador de mensagens WhatsApp com automação stealth",
   "main": "./out/main/index.js",
-  "author": "Novo Disparador",
+  "author": "DisparaZAP",
   "license": "MIT",
   "scripts": {
     "dev": "electron-vite dev",

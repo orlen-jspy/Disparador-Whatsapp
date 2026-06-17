@@ -1,6 +1,30 @@
+function getSaudacao(): string {
+  const hora = new Date().getHours()
+  if (hora >= 5 && hora < 12) return 'bom dia'
+  if (hora >= 12 && hora < 18) return 'boa tarde'
+  return 'boa noite'
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
 export function processSpintax(text: string, contactName: string): string {
-  const resolvedName = text.replace(/\[NOME\]/g, contactName)
-  return parseSpintax(resolvedName)
+  const saudacao = getSaudacao()
+  const withName = text.replace(/\[NOME\]/g, contactName)
+
+  const withGreeting = withName.replace(/\[SAUDACAO\]/g, (_match, offset: number) => {
+    if (offset === 0) return capitalize(saudacao)
+    for (let i = offset - 1; i >= 0; i--) {
+      const ch = withName[i]
+      if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') continue
+      if (ch === '.' || ch === '!' || ch === '?') return capitalize(saudacao)
+      break
+    }
+    return saudacao
+  })
+
+  return parseSpintax(withGreeting)
 }
 
 function parseSpintax(input: string): string {

@@ -20,7 +20,7 @@ export default function LogConsole({ logs }: Props): React.ReactElement {
   }, [logs.length])
 
   return (
-    <div className="h-48 border-t border-surface-700 bg-surface-800 flex flex-col">
+    <div className="h-full border-t border-surface-700 bg-surface-800 flex flex-col">
       <div className="px-4 py-1.5 text-xs font-medium text-surface-400 uppercase border-b border-surface-700">
         Console
         {logs.length > 0 && <span className="ml-2 text-surface-500">({logs.length} entradas)</span>}
