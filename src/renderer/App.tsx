@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import type { LogEntry, ConnectionStatus, DispatchProgress, TabState, Contact } from '../types'
+import { ThemeProvider, useTheme } from './components/ThemeProvider'
 import Dashboard from './components/Dashboard'
 import ContactsPanel from './components/ContactsPanel'
 import MessageComposer from './components/MessageComposer'
@@ -43,7 +44,9 @@ function createDefaultTab(id: string, profileDir: string): TabState {
   }
 }
 
-export default function App(): React.ReactElement {
+function AppInner(): React.ReactElement {
+  const { theme, toggleTheme } = useTheme()
+
   const [tabs, setTabs] = useState<TabState[]>([])
   const [activeTabId, setActiveTabId] = useState<string>('')
   const [initialized, setInitialized] = useState(false)
@@ -229,8 +232,8 @@ export default function App(): React.ReactElement {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-surface-900 text-white select-none">
-      <header className="flex items-center justify-between px-6 py-3 border-b border-surface-700 bg-surface-800">
+    <div className="h-screen flex flex-col bg-surface-900 text-surface-200 select-none">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-surface-700" style={{ backgroundColor: 'rgb(var(--bg-header))' }}>
         <h1 className="text-lg font-semibold text-primary-400">DisparaZAP</h1>
         <div className="flex items-center gap-4">
           {(activeTab.progress || activeTab.logs.length > 0) && (
@@ -242,6 +245,13 @@ export default function App(): React.ReactElement {
             </button>
           )}
           <Dashboard status={activeTab.connectionStatus} progress={activeTab.progress} />
+          <button
+            onClick={toggleTheme}
+            className="text-surface-400 hover:text-surface-200 text-sm transition-colors"
+            title={theme === 'dark' ? 'Tema claro' : 'Tema escuro'}
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
         </div>
       </header>
 
@@ -305,7 +315,7 @@ export default function App(): React.ReactElement {
             onResize={(delta) => setLogHeight(clamp(100, 500, logHeightRef.current - delta))}
           />
 
-          <div style={{ height: logHeight, minHeight: 100 }} className="shrink-0 border-t border-surface-700">
+          <div style={{ height: logHeight, minHeight: 100, backgroundColor: 'rgb(var(--bg-console))' }} className="shrink-0 border-t border-surface-700">
             <LogConsole logs={activeTab.logs} />
           </div>
         </main>
@@ -333,6 +343,17 @@ export default function App(): React.ReactElement {
           />
         </div>
       </div>
+      <div className="fixed bottom-2 right-3 text-xs text-surface-500 opacity-40 select-none pointer-events-none">
+        Desenvolvido por: Orlen Junior
+      </div>
     </div>
+  )
+}
+
+export default function App(): React.ReactElement {
+  return (
+    <ThemeProvider>
+      <AppInner />
+    </ThemeProvider>
   )
 }

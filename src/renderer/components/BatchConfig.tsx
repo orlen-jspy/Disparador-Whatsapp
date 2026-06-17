@@ -48,7 +48,7 @@ export default function BatchConfig({
             value={lote}
             onChange={(e) => handleLoteChange(Number(e.target.value))}
             disabled={disparando}
-            className="w-full px-2 py-1 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
+            className="w-full px-3 py-1.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -61,7 +61,7 @@ export default function BatchConfig({
               onChange={(e) => onChangeRecallMin(Number(e.target.value))}
               onBlur={(e) => handleRecallMinBlur(Number(e.target.value))}
               disabled={disparando}
-              className="w-full px-2 py-1 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
+              className="w-full px-3 py-1.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
             />
           </div>
           <div>
@@ -73,7 +73,7 @@ export default function BatchConfig({
               onChange={(e) => onChangeRecallMax(Number(e.target.value))}
               onBlur={(e) => handleRecallMaxBlur(Number(e.target.value))}
               disabled={disparando}
-              className="w-full px-2 py-1 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
+              className="w-full px-3 py-1.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
             />
           </div>
         </div>

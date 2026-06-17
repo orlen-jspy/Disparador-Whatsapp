@@ -29,7 +29,7 @@ export default function SendButton({
         )}
         <button
           onClick={onStop}
-          className="w-full px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-500 rounded transition-colors"
+          className="w-full px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-500 text-white rounded transition-colors"
         >
           Parar Disparo
         </button>
@@ -41,7 +41,7 @@ export default function SendButton({
     <button
       onClick={onStart}
       disabled={!podeIniciar}
-      className="w-full px-4 py-2.5 text-sm font-medium bg-primary-600 hover:bg-primary-500 disabled:bg-surface-700 disabled:text-surface-400 rounded transition-colors"
+      className="w-full px-4 py-2.5 text-sm font-medium bg-primary-600 hover:bg-primary-500 disabled:bg-surface-700 disabled:text-surface-600 text-white rounded transition-colors"
     >
       Iniciar Disparo
     </button>

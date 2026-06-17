@@ -20,7 +20,7 @@ export default function LogConsole({ logs }: Props): React.ReactElement {
   }, [logs.length])
 
   return (
-    <div className="h-full border-t border-surface-700 bg-surface-800 flex flex-col">
+    <div className="h-full flex flex-col">
       <div className="px-4 py-1.5 text-xs font-medium text-surface-400 uppercase border-b border-surface-700">
         Console
         {logs.length > 0 && <span className="ml-2 text-surface-500">({logs.length} entradas)</span>}
@@ -30,7 +30,7 @@ export default function LogConsole({ logs }: Props): React.ReactElement {
           <p className="text-surface-500 italic">Nenhum evento registrado.</p>
         ) : (
           logs.map((entry) => (
-            <div key={entry.id} className="flex gap-2">
+            <div key={entry.id} className="flex gap-2 italic">
               <span className="text-surface-500 shrink-0">{entry.timestamp}</span>
               <span className={`${LEVEL_STYLES[entry.level]} break-all`}>{entry.message}</span>
             </div>

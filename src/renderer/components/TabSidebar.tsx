@@ -137,7 +137,7 @@ export default function TabSidebar({
             <div className="relative">
               <button
                 onClick={() => setShowNewMenu(!showNewMenu)}
-                className="w-full px-2 py-1 text-xs bg-primary-600 hover:bg-primary-500 rounded transition-colors text-center"
+                className="w-full px-2 py-1 text-xs bg-primary-600 hover:bg-primary-500 text-white rounded transition-colors text-center"
               >
                 + Novo
               </button>
@@ -203,7 +203,7 @@ export default function TabSidebar({
                       onBlur={handleRenameConfirm}
                       onKeyDown={handleRenameKeyDown}
                       maxLength={50}
-                      className="flex-1 px-1 py-0.5 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500 text-surface-200"
+                      className="flex-1 px-1 py-0.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500 text-surface-200"
                     />
                   ) : (
                     <span className="truncate">{tab.label}</span>

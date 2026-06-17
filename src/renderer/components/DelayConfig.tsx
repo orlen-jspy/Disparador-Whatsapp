@@ -41,7 +41,7 @@ export default function DelayConfig({
             onChange={(e) => onChangeMin(Number(e.target.value))}
             onBlur={(e) => handleMinBlur(Number(e.target.value))}
             disabled={disparando}
-            className="w-full px-2 py-1 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
+            className="w-full px-3 py-1.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
           />
         </div>
         <div>
@@ -53,7 +53,7 @@ export default function DelayConfig({
             onChange={(e) => onChangeMax(Number(e.target.value))}
             onBlur={(e) => handleMaxBlur(Number(e.target.value))}
             disabled={disparando}
-            className="w-full px-2 py-1 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
+            className="w-full px-3 py-1.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
           />
         </div>
       </div>

@@ -20,21 +20,24 @@ export default function MessageComposer({ mensagem, onChange, disparando }: Prop
         <button
           onClick={() => insertAtCursor('[NOME]')}
           disabled={disparando}
-          className="px-2 py-0.5 text-xs bg-surface-700 hover:bg-surface-600 disabled:opacity-40 rounded transition-colors"
+          className="px-3 py-1 text-xs border border-surface-700 rounded transition-colors"
+          style={{ backgroundColor: 'rgb(var(--bg-help-btn))', color: 'rgb(var(--text-help-btn))' }}
         >
           [NOME]
         </button>
         <button
           onClick={() => insertAtCursor('{opção1|opção2|opção3}')}
           disabled={disparando}
-          className="px-2 py-0.5 text-xs bg-surface-700 hover:bg-surface-600 disabled:opacity-40 rounded transition-colors"
+          className="px-3 py-1 text-xs border border-surface-700 rounded transition-colors"
+          style={{ backgroundColor: 'rgb(var(--bg-help-btn))', color: 'rgb(var(--text-help-btn))' }}
         >
           {'{...|...}'}
         </button>
         <button
           onClick={() => insertAtCursor('{Olá|Oi {amigo|colega|parceiro}}')}
           disabled={disparando}
-          className="px-2 py-0.5 text-xs bg-surface-700 hover:bg-surface-600 disabled:opacity-40 rounded transition-colors"
+          className="px-3 py-1 text-xs border border-surface-700 rounded transition-colors"
+          style={{ backgroundColor: 'rgb(var(--bg-help-btn))', color: 'rgb(var(--text-help-btn))' }}
         >
           Exemplo aninhado
         </button>
@@ -44,7 +47,8 @@ export default function MessageComposer({ mensagem, onChange, disparando }: Prop
         onChange={(e) => onChange(e.target.value)}
         disabled={disparando}
         rows={5}
-        className="w-full px-3 py-2 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500 resize-none font-mono"
+        className="w-full px-3 py-2 text-sm rounded focus:outline-none focus:border-primary-500 resize-none font-mono"
+        style={{ backgroundColor: 'rgb(var(--surface-800))', color: 'rgb(var(--surface-200))', border: '1px solid rgb(var(--border-textarea))' }}
         placeholder="Digite a mensagem pronta. Use {opção1|opção2} para spintax e [NOME] para o nome do contato."
       />
     </div>

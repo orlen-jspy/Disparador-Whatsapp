@@ -166,7 +166,7 @@ export default function ContactsPanel({ disparando, results, contacts, onContact
         <button
           onClick={handleImport}
           disabled={disparando}
-          className="w-full px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-500 disabled:bg-surface-700 disabled:text-surface-400 rounded transition-colors"
+          className="w-full px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-500 disabled:bg-surface-700 disabled:text-surface-600 text-white rounded transition-colors"
         >
           Importar XLSX / CSV
         </button>
@@ -176,19 +176,19 @@ export default function ContactsPanel({ disparando, results, contacts, onContact
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           disabled={disparando}
-          className="w-full px-2 py-1 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
+          className="w-full px-3 py-1.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
         />
         <input
           placeholder="Telefone (com DDD)"
           value={telefone}
           onChange={(e) => setTelefone(e.target.value)}
           disabled={disparando}
-          className="w-full px-2 py-1 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
+          className="w-full px-3 py-1.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
         />
         <button
           onClick={handleAdd}
           disabled={disparando}
-          className="w-full px-3 py-1.5 text-sm bg-surface-600 hover:bg-surface-500 disabled:bg-surface-700 disabled:text-surface-400 rounded transition-colors"
+          className="w-full px-3 py-1.5 text-sm bg-surface-600 hover:bg-surface-500 disabled:bg-surface-700 disabled:text-surface-600 rounded transition-colors"
         >
           Adicionar
         </button>
@@ -246,14 +246,14 @@ export default function ContactsPanel({ disparando, results, contacts, onContact
                           <input
                             value={editNome}
                             onChange={(e) => setEditNome(e.target.value)}
-                            className="w-full px-1 py-0.5 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
+                            className="w-full px-1 py-0.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
                           />
                         </td>
                         <td className="px-1 py-1">
                           <input
                             value={editTelefone}
                             onChange={(e) => setEditTelefone(e.target.value)}
-                            className="w-full px-1 py-0.5 text-sm bg-surface-700 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
+                            className="w-full px-1 py-0.5 text-sm bg-surface-800 border border-surface-600 rounded focus:outline-none focus:border-primary-500"
                           />
                         </td>
                         <td className="px-1 py-1">
